@@ -2,6 +2,7 @@ import hashlib
 import models
 import os
 import os.path
+import peewee
 
 def init():
     models.db.connect()
@@ -35,3 +36,11 @@ def traverse(path):
                 print('Writing chunks until', file_name)
                 models.Entry.insert_many(buf).execute()
                 buf.clear()
+
+def reduce():
+    from models import Entry
+    from peewee import fn, SQL
+    duplicates = Entry
+        .select(Entry.hash_str, fn.COUNT(Entry.hash_str).alias('occurrence'))
+        .group_by(Entry.hash_str).having(SQL('occurrence') > 1)
+    return duplicates
