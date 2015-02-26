@@ -20,11 +20,18 @@ def digest(file_path):
 def traverse(path):
     path = os.path.abspath(path)
     for (dir_path, dirs, files) in os.walk(path):
-        for file_name in files:
+        buf = []
+        for file_name in sorted(files):
             file_path = os.path.join(dir_path, file_name)
+            entry = {
+                'path': file_path,
+                'size': os.path.getsize(file_path),
+                'last_modified': os.path.getmtime(file_path),
+                'hash_str': digest(file_path)
+            }
 
-            entry = models.Entry(path=file_path)
-            entry.size = os.path.getsize(file_path)
-            entry.last_modified = os.path.getmtime(file_path)
-            entry.hash_str = digest(file_path)
-            entry.save()
+            buf.append(entry)
+            if len(buf) >= 256:
+                print('Writing chunks until', file_name)
+                models.Entry.insert_many(buf).execute()
+                buf.clear()
