@@ -22,6 +22,9 @@ def traverse(path):
     for (dir_path, dirs, files) in os.walk(path):
         buf = []
         for file_name in sorted(files):
+            if file_name.startswith('.'):
+                continue
+
             file_path = os.path.join(dir_path, file_name)
             entry = {
                 'path': file_path,
@@ -44,3 +47,32 @@ def reduce():
         .group_by(Entry.hash_str)
         .having(SQL('occurrence') > 1))
     return duplicates
+
+def check_reduce():
+    from models import Entry
+    size_miss, time_miss, count = 0, 0, 0
+    for hash_entry in reduce():
+        entries = Entry.select().where(Entry.hash_str == hash_entry.hash_str)
+        size, last_modified, path = None, None, None
+        for entry in entries:
+            if size:
+                if entry.size != size:
+                    print('Size mismatch:', hash_entry.hash_str, entry.size, size, entry.path)
+                    size_miss += 1
+                elif entry.last_modified != last_modified:
+                    if abs(entry.last_modified - last_modified) < 5:
+                        continue
+                    print('Time mismatch:', hash_entry.hash_str, entry.last_modified, last_modified, path, entry.path)
+                    time_miss += 1
+            else:
+                size, last_modified, path = entry.size, entry.last_modified, entry.path
+        count += 1
+
+    print('Mismatches: size {}, time {} of total {} duplicates'.format(size_miss, time_miss, count))
+
+def filestat(path):
+    from datetime import datetime
+    print('Size', os.path.getsize(path))
+    print('Ctime', datetime.fromtimestamp(os.path.getctime(path)))
+    print('Mtime', datetime.fromtimestamp(os.path.getmtime(path)))
+    print('Atime', datetime.fromtimestamp(os.path.getatime(path)))
