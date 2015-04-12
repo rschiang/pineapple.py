@@ -74,3 +74,20 @@ def query_file(path):
     print('Ctime', datetime.fromtimestamp(os.path.getctime(path)))
     print('Mtime', datetime.fromtimestamp(os.path.getmtime(path)))
     print('Atime', datetime.fromtimestamp(os.path.getatime(path)))
+
+def move_duplicates(target_dir):
+    from models import Entry
+    count = 0
+    for hash_entry in get_duplicates():
+        hash_str = hash_entry.hash_str
+        entries = (Entry
+            .select()
+            .where(Entry.hash_str == hash_str)
+            .order_by(Entry.last_modified, Entry.id)
+            .offset(1))
+        for entry in entries:
+            new_path = os.path.join(target_dir, '{}_{}'.format(hash_str, os.path.basename(entry.path)))
+            print('Rename', entry.path, 'to', new_path)
+            os.rename(entry.path, new_path)
+            count += 1
+    print('Moved', count, 'duplicate files')
