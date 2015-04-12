@@ -21,6 +21,27 @@ prevent messing up your environment.
 Pineapple.py is pretty straightforward. Import functions and use them in an
 interactive interpreter or your own script.
 
+A brief example:
+```
+localhost:~ $ ls
+photos		photos2		other
+localhost:~ $ python
+Python 3.4.0
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from pineapple import *
+>>> init()      # This will set up the database. Call it only once.
+>>> for folder in ('photos', 'photos2'):
+...     traverse(folder)
+Writing chunks until DSC_0256.JPG
+Writing chunks until DSC_0512.JPG
+>>> check_correctness()
+Mismatches: size 0, time 0 of total 322 duplicates.
+>>> move_duplicates('other')
+Moved 322 duplicate files.
+>>> prune()
+322 non-existent file entries cleared.
+```
+
 ## License
 
 See [project license](LICENSE.md).
