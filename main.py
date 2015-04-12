@@ -38,6 +38,9 @@ def traverse(path):
                 print('Writing chunks until', file_name)
                 models.Entry.insert_many(buf).execute()
                 buf.clear()
+        if buf:
+            # Clear out remaining buffer
+            models.Entry.insert_many(buf).execute()
 
 def get_duplicates():
     from models import Entry
