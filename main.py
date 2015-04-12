@@ -2,7 +2,6 @@ import hashlib
 import models
 import os
 import os.path
-import peewee
 
 def init():
     models.db.connect()
@@ -40,7 +39,8 @@ def traverse(path):
 def reduce():
     from models import Entry
     from peewee import fn, SQL
-    duplicates = Entry
+    duplicates = (Entry
         .select(Entry.hash_str, fn.COUNT(Entry.hash_str).alias('occurrence'))
-        .group_by(Entry.hash_str).having(SQL('occurrence') > 1)
+        .group_by(Entry.hash_str)
+        .having(SQL('occurrence') > 1))
     return duplicates
