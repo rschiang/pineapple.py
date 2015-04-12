@@ -39,19 +39,18 @@ def traverse(path):
                 models.Entry.insert_many(buf).execute()
                 buf.clear()
 
-def reduce():
+def get_duplicates():
     from models import Entry
     from peewee import fn, SQL
-    duplicates = (Entry
+    return (Entry
         .select(Entry.hash_str, fn.COUNT(Entry.hash_str).alias('occurrence'))
         .group_by(Entry.hash_str)
         .having(SQL('occurrence') > 1))
-    return duplicates
 
-def check_reduce():
+def check_correctness():
     from models import Entry
     size_miss, time_miss, count = 0, 0, 0
-    for hash_entry in reduce():
+    for hash_entry in get_duplicates():
         entries = Entry.select().where(Entry.hash_str == hash_entry.hash_str)
         size, last_modified, path = None, None, None
         for entry in entries:
@@ -67,10 +66,9 @@ def check_reduce():
             else:
                 size, last_modified, path = entry.size, entry.last_modified, entry.path
         count += 1
-
     print('Mismatches: size {}, time {} of total {} duplicates'.format(size_miss, time_miss, count))
 
-def filestat(path):
+def query_file(path):
     from datetime import datetime
     print('Size', os.path.getsize(path))
     print('Ctime', datetime.fromtimestamp(os.path.getctime(path)))
