@@ -94,3 +94,12 @@ def move_duplicates(target_dir):
             os.rename(entry.path, new_path)
             count += 1
     print('Moved', count, 'duplicate files')
+
+def prune():
+    from models import Entry
+    count = 0
+    for entry in Entry.select():
+        if not os.path.exists(entry.path):
+            entry.delete_instance()
+            count += 1
+    print(count, 'non-existent file entries cleared')
